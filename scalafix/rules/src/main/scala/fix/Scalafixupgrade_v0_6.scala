@@ -20,7 +20,7 @@ object Scalafixupgrade_v0_6 extends Rule("Scalafix_v0_6") {
       case q""" "ch.epfl.scala" % "sbt-scalafix" % ${v: Lit.String} """ =>
         patch += ctx.replaceTree(
           v,
-          Lit.String("0.6.0-M6").syntax
+          Lit.String("0.6.0-M7").syntax
         )
       case t @ q"scalafixSourceroot := sourceDirectory.in(Compile).value" =>
         patch += ctx.replaceTree(
