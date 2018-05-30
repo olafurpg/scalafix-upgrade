@@ -1,16 +1,25 @@
 lazy val V = _root_.scalafix.Versions
 // Use a scala version supported by scalafix.
-scalaVersion in ThisBuild := V.scala212
+inThisBuild(
+  List(
+    scalaVersion := V.scala212,
+    addCompilerPlugin(scalafixSemanticdb),
+    scalacOptions += "-Yrangepos"
+  )
+)
 
 lazy val rules = project.settings(
   libraryDependencies += "ch.epfl.scala" %% "scalafix-core" % V.version
 )
 
 lazy val input = project.settings(
-  scalafixSourceroot := sourceDirectory.in(Compile).value
+  scalacOptions += s"-P:semanticdb:sourceroot:${sourceDirectory.in(Compile).value}",
+  libraryDependencies += "ch.epfl.scala" % "scalafix-testkit" % "0.5.10" cross CrossVersion.full
 )
 
-lazy val output = project
+lazy val output = project.settings(
+  libraryDependencies += "ch.epfl.scala" % "scalafix-testkit" % V.version cross CrossVersion.full
+)
 
 lazy val tests = project
   .settings(

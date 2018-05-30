@@ -1,7 +1,7 @@
-# Scalafix rules for V06
+# Scalafix rules for scalafix
 
 To develop rule:
 ```
 sbt ~tests/test
-# edit rules/src/main/scala/fix/V06_v0_6.scala
+# edit rules/src/main/scala/fix/Scalafix_v0_6.scala
 ```
