@@ -13,7 +13,10 @@ lazy val rules = project.settings(
 )
 
 lazy val input = project.settings(
-  scalacOptions += s"-P:semanticdb:sourceroot:${sourceDirectory.in(Compile).value}",
+  scalacOptions += {
+    val sourceroot = sourceDirectory.in(Compile).value / "scala"
+    s"-P:semanticdb:sourceroot:$sourceroot"
+  },
   libraryDependencies += "ch.epfl.scala" % "scalafix-testkit" % "0.5.10" cross CrossVersion.full
 )
 
@@ -25,6 +28,12 @@ lazy val tests = project
   .settings(
     libraryDependencies += "ch.epfl.scala" % "scalafix-testkit" % V.version % Test cross CrossVersion.full,
     buildInfoPackage := "fix",
+    scalafixTestkitOutputSourceDirectories :=
+      sourceDirectories.in(output, Compile).value,
+    scalafixTestkitInputSourceDirectories :=
+      sourceDirectories.in(input, Compile).value,
+    scalafixTestkitInputClasspath :=
+      fullClasspath.in(input, Compile).value,
     buildInfoKeys := Seq[BuildInfoKey](
       "inputSourceroot" ->
         sourceDirectory.in(input, Compile).value,
@@ -35,4 +44,4 @@ lazy val tests = project
     )
   )
   .dependsOn(input, rules)
-  .enablePlugins(BuildInfoPlugin)
+  .enablePlugins(BuildInfoPlugin, ScalafixTestkitPlugin)

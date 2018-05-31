@@ -17,21 +17,51 @@ object Scalafixupgrade_v0_6 extends Rule("Scalafix_v0_6") {
     }
 
     ctx.tree.traverse {
+      case q""" $_.enablePlugins(${t @ q"BuildInfoPlugin"})""" =>
+        patch += ctx.replaceTree(t, "ScalafixTestkitPlugin")
+      case t @ q"""
+        buildInfoKeys := Seq[BuildInfoKey](
+          "inputSourceroot" ->
+            sourceDirectory.in(input, Compile).value,
+          "outputSourceroot" ->
+            sourceDirectory.in(output, Compile).value,
+          "inputClassdirectory" ->
+            classDirectory.in(input, Compile).value
+        )
+        """ =>
+        patch += ctx.replaceTree(
+          t,
+          """scalafixTestkitOutputSourceDirectories :=
+            |      sourceDirectories.in(output, Compile).value,
+            |    scalafixTestkitInputSourceDirectories :=
+            |      sourceDirectories.in(input, Compile).value,
+            |    scalafixTestkitInputClasspath :=
+            |      fullClasspath.in(input, Compile).value""".stripMargin
+        )
+      case t @ q""" addSbtPlugin("com.eed3si9n" % "sbt-buildinfo" % ${_: Lit.String}) """ =>
+        patch += ctx.removeTokens(t.tokens)
+      case t @ q""" buildInfoPackage := "fix" """ =>
+        patch += ctx.removeTokens(t.tokens)
+        val comma =
+          ctx.tokenList.trailing(t.tokens.last).takeWhile(_.is[Token.Comma])
+        patch += ctx.removeTokens(comma)
       case q""" "ch.epfl.scala" % "sbt-scalafix" % ${v: Lit.String} """ =>
         patch += ctx.replaceTree(
           v,
-          Lit.String("0.6.0-M7").syntax
+          Lit.String(scalafix.Versions.version).syntax
         )
       case t @ q"scalafixSourceroot := sourceDirectory.in(Compile).value" =>
         patch += ctx.replaceTree(
           t,
-          "scalacOptions += s\"-P:semanticdb:sourceroot:${sourceDirectory.in(Compile).value}\""
+          """scalacOptions += {
+            |    val sourceroot = sourceDirectory.in(Compile).value / "scala"
+            |    s"-P:semanticdb:sourceroot:$sourceroot"
+            |  }""".stripMargin
         )
       case t @ q"scalaVersion in ThisBuild := V.scala212" =>
         patch += ctx.replaceTree(
           t,
-          """
-            |inThisBuild(
+          """inThisBuild(
             |  List(
             |    scalaVersion := V.scala212,
             |    addCompilerPlugin(scalafixSemanticdb),
@@ -53,11 +83,7 @@ object Scalafixupgrade_v0_6 extends Rule("Scalafix_v0_6") {
       case t @ init"SemanticRuleSuite(..$_)" =>
         patch += ctx.replaceTree(
           t,
-          """scalafix.testkit.SemanticRuleSuite(
-            |      BuildInfo.inputClassdirectory,
-            |      BuildInfo.inputSourceroot,
-            |      Seq(BuildInfo.outputSourceroot)
-            |    )""".stripMargin
+          """scalafix.testkit.SemanticRuleSuite""".stripMargin
         )
     }
 

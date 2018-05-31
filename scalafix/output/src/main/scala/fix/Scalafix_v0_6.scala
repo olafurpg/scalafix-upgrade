@@ -8,11 +8,7 @@ import scala.collection.mutable.ListBuffer
 import scalafix.v0._
 
 object Scalafix_v0_6_Test
-    extends scalafix.testkit.SemanticRuleSuite(
-      BuildInfo.inputClassdirectory,
-      BuildInfo.inputSourceroot,
-      Seq(BuildInfo.outputSourceroot)
-    ) {
+    extends scalafix.testkit.SemanticRuleSuite {
   ListBuffer.empty[Int].append(1)
   Lit.String("1").collectFirst { case q"1" => q"2".parents; Patch.empty }
   // Add code that needs fixing here.

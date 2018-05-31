@@ -1,11 +1,10 @@
 /*
-rule = "class:fix.Scalafix_v0_6"
+rule = "class:fix.Scalafixupgrade_v0_6"
  */
 
 package fix
 
 import java.io.File
-import org.langmeta.internal.io.PathIO
 import org.langmeta.io.AbsolutePath
 import scalafix.patch.Patch
 import org.langmeta.io.Classpath
